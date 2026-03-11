@@ -9,12 +9,14 @@ pipeline {
 
         stage('Checkout Code') {
             steps {
+                echo "Cloning repository..."
                 checkout scm
             }
         }
 
         stage('Setup Python Environment') {
             steps {
+                echo "Creating Python virtual environment"
                 sh '''
                 python3 -m venv $VENV
                 . $VENV/bin/activate
@@ -25,6 +27,7 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
+                echo "Installing Python dependencies"
                 sh '''
                 . $VENV/bin/activate
                 pip install -r requirements.txt
@@ -34,14 +37,16 @@ pipeline {
 
         stage('Dependency Scan - Trivy') {
             steps {
+                echo "Running Trivy vulnerability scan"
                 sh '''
-                trivy fs --severity HIGH,CRITICAL --exit-code 1 .
+                trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 .
                 '''
             }
         }
 
         stage('Static Code Scan - Bandit') {
             steps {
+                echo "Running Bandit security scan"
                 sh '''
                 . $VENV/bin/activate
                 bandit -r app/
@@ -51,6 +56,7 @@ pipeline {
 
         stage('Run Unit Tests') {
             steps {
+                echo "Running pytest"
                 sh '''
                 . $VENV/bin/activate
                 pytest
@@ -63,11 +69,15 @@ pipeline {
     post {
 
         success {
-            echo "Pipeline executed successfully"
+            echo "Pipeline completed successfully"
         }
 
         failure {
-            echo "Security vulnerabilities or tests failed"
+            echo "Pipeline failed due to vulnerabilities or test failures"
+        }
+
+        always {
+            echo "Pipeline execution finished"
         }
     }
 }
