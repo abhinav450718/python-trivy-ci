@@ -59,7 +59,7 @@ pipeline {
                 echo "Running pytest"
                 sh '''
                 . $VENV/bin/activate
-                pytest
+                PYTHONPATH=$PWD pytest
                 '''
             }
         }
